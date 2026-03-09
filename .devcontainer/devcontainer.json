@@ -1,0 +1,24 @@
+{
+  "name": "Lean 4 Development",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "leanprover.lean4"
+      ],
+      "settings": {
+        "lean4.serverEnv": {
+          "LEAN_SRC_PATH": "/workspaces/lean-project-template"
+        }
+      }
+    }
+  },
+  "remoteEnv": {
+    "PATH": "/home/vscode/.elan/bin:${containerEnv:PATH}"
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh && source ~/.bashrc",
+  "remoteUser": "vscode"
+} 
