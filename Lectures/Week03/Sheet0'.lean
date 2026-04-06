@@ -41,9 +41,10 @@ example : (1 : ℕ) + 1 ≠ 6 := by
 example : (3.141 : ℝ) + 2.718 = 5.859 := by
   norm_num
 
-example {a b x c d : ℝ} (h1 : a +1 ≤ b+1) (h2 : c ≤ d): x ^ 2 * a + c ≤ x ^ 2 * b + d := by
+example {a b x c d : ℝ} (h1 : a +1 ≤ b+1) (h2 : c ≤ d) : x ^ 2 * a + c ≤ x ^ 2 * b + d := by
   gcongr
   linarith
+
 
 -- Example on grw/rel/gcongr
 example {a b x c d : ℝ} (h1 : a ≤ b) (h2 : c ≤ d) :

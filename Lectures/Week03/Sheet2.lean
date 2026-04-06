@@ -10,14 +10,13 @@ import Lectures.Week03.Sheet1
 
 set_option autoImplicit false
 
-
 -- strong induction and two-step induction
 #check  Nat.strong_induction_on
 
 def fib : Nat → Nat
-  | 0   => 1
-  | 1   => 1
-  | n+2 => fib (n+1) + fib n
+  | 0     => 1
+  | 1     => 1
+  | n + 2 => fib (n + 1) + fib n
 
 #eval fib 1
 #eval fib 2
@@ -26,21 +25,20 @@ def fib : Nat → Nat
 #eval fib 5
 
 -- Example
-example (x: ℕ): fib x ≤ 2^x := by
-  induction x using Nat.strong_induction_on
-  rename_i n h
+example (x : ℕ) : fib x ≤ 2^x := by
+  induction' x using Nat.strong_induction_on with n h
   unfold fib
-  if h: n ≤ 1 then
+  if h₁ : n ≤ 1 then
     split
     · norm_num
     · norm_num
     · contradiction
   else
-    simp at h
-    split <;> all_goals (simp)
+    simp at h₁
+    split <;> all_goals simp
     simp_all
     rename_i n x
-    have fxp: fib (x + 1) ≤ 2^(x+1) := by
+    have fxp : fib (x + 1) ≤ 2^(x+1) := by
       apply h
       omega
     have fx : fib x ≤ 2^x := by
@@ -52,32 +50,36 @@ example (x: ℕ): fib x ≤ 2^x := by
 #check Nat.twoStepInduction
 
 -- Exercise 5
-example (x: ℕ): fib x ≤ 2^x := by
-  induction x using Nat.twoStepInduction
+example (x : ℕ) : fib x ≤ 2^x := by
+  induction' x using Nat.twoStepInduction with n h₁ h₂
   · simp [fib]
   · simp [fib]
-  · sorry
+  · rw [fib]
+    grw [h₁, h₂]
+    ring_nf ; gcongr ; simp
 
 -- Define the following recurrence relation
--- f (n) ≤ n + 2* f(n/2)
+-- f (n) = n + 2* f(n/2)
 -- f (1) = 1
 
-def f (n : ℕ): ℕ :=
-  if n = 0 then 0
-  else 2*f (n/2) + n
+def f (n : ℕ) : ℕ :=
+  if n = 0 then
+    0
+  else
+    2 * f (n/2) + n
 
-def f_closed (n : ℕ) : ℚ := n * (Nat.log 2 n)+n
+def f_closed (n : ℕ) : ℚ := n * (Nat.log 2 n) + n
 
 #eval (List.map f [0,1,2,3,4,5,6,7,8])
 #eval (List.map f_closed [0,1,2,3,4,5,6,7,8])
 
 -- Example
- example (n :ℕ): f (2^n) ≤ (n+1)*2^n   := by
+ example (n : ℕ): f (2^n) ≤ (n + 1) * 2^n := by
   induction' n with i ih
   · simp [f]
   · unfold f
-    simp only [Nat.pow_eq_zero, OfNat.ofNat_ne_zero, ne_eq, Nat.add_eq_zero, one_ne_zero, and_false,
-      not_false_eq_true, and_true, ↓reduceIte]
+    simp only [Nat.pow_eq_zero, OfNat.ofNat_ne_zero, ne_eq, Nat.add_eq_zero,
+      one_ne_zero, and_false, not_false_eq_true, and_true, ↓reduceIte]
     ring_nf
     -- use rw?? tactic to simplify a specific expression
     rw [Nat.mul_div_left (2 ^ i) (by norm_num)]
@@ -85,13 +87,23 @@ def f_closed (n : ℕ) : ℚ := n * (Nat.log 2 n)+n
     linarith
 
 -- Exercise 6: the cost of binary search
-def g (n : ℕ): ℕ :=
-  if n = 0 then 0
-  else g (n/2) + 1
+def g (n : ℕ) : ℕ :=
+  if n = 0 then
+    0
+  else
+    g (n / 2) + 1
 
-def g_close (n :ℕ ) : ℕ  :=  Nat.log 2 n + 1
+def g_close (n : ℕ) : ℕ  :=  Nat.log 2 n + 1
 
 #eval (List.map g [0,1,2,3,4,5,6,7,8,1000])
 #eval (List.map g_close [0,1,2,3,4,5,6,7,8,1000])
 
-example (n :ℕ): g (2^n) ≤ n+1 := by sorry
+example (n : ℕ) : g (2^n) ≤ n + 1 := by
+  induction' n with i ih
+  . simp [g]
+  . unfold g
+    split
+    . simp
+    . rw [Nat.pow_add]
+      simp
+      assumption

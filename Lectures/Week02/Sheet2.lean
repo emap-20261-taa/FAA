@@ -12,8 +12,9 @@ set_option tactic.hygienic false
 /-! New tactics
  * `left`  -- change the goal of the form P ∨ Q to P
  * `right` -- change the goal of the form P ∨ Q to Q
- * `cases` -- deal with cases. That is, if you have h: P ∨ Q then cases h will automatically split into two goals.
-              One goal assume P and the other goal assume Q.
+ * `cases` -- deal with cases. That is, if you have h: P ∨ Q then cases h will
+              automatically split into two goals. One goal assume P and the
+              other goal assume Q.
  * `by_cases` -- prove by cases
 -/
 
@@ -50,7 +51,14 @@ example: ∀ x ∈ A ∪ B, x ∈ A ∪ B ∪ C:= by
 #check mem_union
 #check subset_def
 
-lemma my_union_subset_imp :  A ⊆ C ∧ B ⊆ C → A ∪ B ⊆ C := by sorry
+lemma my_union_subset_imp :  A ⊆ C ∧ B ⊆ C → A ∪ B ⊆ C := by
+  intro h
+  intro x hx
+  cases hx with
+  | inl h2 =>
+    exact h.1 h2
+  | inr h2 =>
+    exact h.2 h2
 
 -- Extend my_union_subset_imp to my_union_subset_iff
 -- You are allowed to use *only* these two lemmas.
@@ -60,36 +68,40 @@ lemma my_union_subset_imp :  A ⊆ C ∧ B ⊆ C → A ∪ B ⊆ C := by sorry
 -- running example
 lemma my_union_subset_iff:  A ⊆ C ∧ B ⊆ C ↔ A ∪ B ⊆ C := by
   constructor
-  intro a
-  exact my_union_subset_imp A B C a
-  intro
-  rw [Set.subset_def] at a
-  constructor
-  intro x hx
-  apply a
-  simp only [mem_union]
-  left
-  exact hx
-  intro x hx
-  apply a
-  right
-  exact hx
+  . exact my_union_subset_imp A B C
+  . intro h
+    rw [Set.subset_def] at h
+    constructor
+    . intro x hx
+      apply h
+      left
+      exact hx
+    . intro x hx
+      apply h
+      right
+      exact hx
 
 -- Exercise 6: you may want to use my_union_subset_iff
-example : B ⊆ A → C ⊆ A → B ∪ C ⊆ A := by sorry
+example : B ⊆ A → C ⊆ A → B ∪ C ⊆ A := by
+  intro h1 h2
+  apply my_union_subset_iff B C A |>.mp
+  exact ⟨h1, h2⟩
+
 
 /-! New tactics
- * `ext`  -- extensionality. Proving that two functions are identical. Since sets are functions in Lean, `ext` can be used to prove set equality.
+ * `ext`  -- extensionality. Proving that two functions are identical. Since
+             sets are functions in Lean, `ext` can be used to prove set
+             equality.
 -/
 
 -- example
 lemma inter_comm: A ∩ B = B ∩ A := by
   ext x
   constructor
-  rintro ⟨a,b⟩
-  exact ⟨b,a⟩
-  rintro ⟨a,b⟩
-  exact ⟨b,a⟩
+  . rintro ⟨a,b⟩
+    exact ⟨b,a⟩
+  . rintro ⟨a,b⟩
+    exact ⟨b,a⟩
 
 -- example
 lemma absorption_law: A ∩ (A ∪ B) = A := by
@@ -104,4 +116,10 @@ lemma absorption_law: A ∩ (A ∪ B) = A := by
       exact a
 
 -- Exercise 7
-lemma union_comm : A ∪ B = B ∪ A := by sorry
+lemma union_comm : A ∪ B = B ∪ A := by
+  ext
+  constructor <;>
+  . intro h
+    cases h
+    . right ; assumption
+    . left ; assumption

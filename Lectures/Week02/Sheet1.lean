@@ -31,8 +31,8 @@ So far we have seen the following tactics:
 In Lean, a set is always a set of objects of some type.
 
 * If α is a type, then the type Set α consists of sets of elements of α
-* For example, the type Set ℕ consists of sets of natural numbers. Given n : ℕ
-  and s : Set ℕ, the expression n ∈ s means n is a member of s
+* For example, the type Set ℕ consists of sets of natural numbers. Given `n : ℕ`
+  and `s : Set ℕ`, the expression `n ∈ s` means n is a member of s
 * Two special sets for Set α: ∅ and univ: ∅ is the set having zero elements from
   α and univ is the set of all elements from α
 
