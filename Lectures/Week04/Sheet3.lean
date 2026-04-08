@@ -56,7 +56,8 @@ theorem len_append_induction (x : ℕ) (l : List ℕ) : len (l ++ [x]) = 1 + len
 
 #check len.induct
 -- proof by functional induction
-theorem len_append_fun_induction (x : ℕ) (l : List ℕ) : len (l ++ [x]) = 1 + len l  := by
+theorem len_append_fun_induction (x : ℕ) (l : List ℕ)
+  : len (l ++ [x]) = 1 + len l  := by
   fun_induction len l
   · simp [len]
   · simp only [List.cons_append]
@@ -65,20 +66,42 @@ theorem len_append_fun_induction (x : ℕ) (l : List ℕ) : len (l ++ [x]) = 1 +
     rw [ih1]
 
 -- proof by functional induction oneline
-theorem len_append_fun_induction_oneline (x : ℕ) (l : List ℕ) : len (l ++ [x]) = 1 + len l  := by
+theorem len_append_fun_induction_oneline (x : ℕ) (l : List ℕ)
+  : len (l ++ [x]) = 1 + len l  := by
   fun_induction len l <;> all_goals grind [len]
 
 -- # Exercise 3.1: write filter where it takes out items that are not in the list
 def my_filter {α : Type} (p : α → Bool) : List α → List α
-| [] => []
-| a :: as => sorry
+| []      => []
+| a :: as => if p a then a :: my_filter p as else my_filter p as
 
-example: my_filter (fun x => x % 2 == 0) [1, 2, 3, 4, 5, 6] = [2,4,6] := sorry
-example: my_filter (fun s => s.startsWith "a") ["apple", "banana", "almond", "kiwi"] =  ["apple", "almond"] := sorry
+
+example: my_filter (fun x => x % 2 = 0) [1, 2, 3, 4, 5, 6] = [2,4,6] := by
+  rfl
+
+example : my_filter (fun c => c = 'a') ['a','c','d'] = ['a'] :=
+  rfl
+
+example: my_filter (fun s => s.startsWith "a")
+  ["apple", "banana"] = ["apple"] := by
+  native_decide
+
+-- #reduce "alex".startsWith "a"
+-- porque funciona? dado que acima preciso do native
 
 -- Prove this:
+
 theorem filter_append {α : Type} (p : α → Bool) (l1 l2 : List α) :
-  my_filter p (l1 ++ l2) = (my_filter p l1) ++ (my_filter p l2) := by sorry
+  my_filter p (l1 ++ l2) = (my_filter p l1) ++ (my_filter p l2) := by
+  induction' l1 with y ys ih
+  . rw [my_filter]
+    -- rw [List.append] ??
+    rfl
+  . rw [List.cons_append]
+    repeat rw [my_filter]
+    cases p y
+    . simp ; assumption
+    . simp ; assumption
 
 
 -- # Exercise 3.2: write foldl
@@ -88,28 +111,45 @@ theorem filter_append {α : Type} (p : α → Bool) (l1 l2 : List α) :
 -- f: the combining function (accumulator -> element -> new_accumulator)
 -- b: the initial base value (accumulator)
 
+-- [a, b, c].foldl f z = f (f (f z a) b) c
+
+#check List.foldl
+
 def my_foldl {α β : Type} (f : β → α → β) (b : β) : List α → β
-| [] => b
-| a :: as => sorry
+| []      => b
+| a :: as => my_foldl f (f b a) as
 
-example: my_foldl (fun acc x => acc + x) 0 [1, 2, 3, 4] = 10 := sorry
-example: my_foldl (fun acc x => x :: acc) ([] : List Nat) [1, 2, 3] = [3, 2, 1] := sorry
+example : my_foldl (fun acc x => acc + x) 0 [1, 2, 3, 4] = 10 := rfl
 
--- Theorem
+example : my_foldl (fun acc x => x :: acc) ([] : List Nat) [1, 2, 3] = [3, 2, 1] := rfl
+
 theorem foldl_append {α β : Type} (f : β → α → β) (b : β) (l1 l2 : List α) :
-  my_foldl f b (l1 ++ l2) = my_foldl f (my_foldl f b l1) l2 := by sorry
-
+  my_foldl f b (l1 ++ l2) = my_foldl f (my_foldl f b l1) l2 := by
+  induction l1 generalizing b with
+  | nil =>
+    grind [my_foldl]
+  | cons y ys ih =>
+    rw [List.cons_append, my_foldl, my_foldl]
+    specialize ih (f b y)
+    assumption
 
 
 -- # Exercise 3.3: Write map function that operates on lists
 def my_map {α β : Type} (f : α → β) : List α → List β
 | [] => []
-| a :: as => sorry
+| a :: as => f a :: my_map f as
 
-example: my_map (fun x => x + 1) [1, 2, 3] = [2,3,4] := sorry
-example: my_map (fun s => s.length) ["hello", "a", "world"] = [5,1,5] := sorry
+example : my_map (fun x => x + 1) [1, 2, 3] = [2,3,4] := rfl
+example :
+  my_map (fun s => s.length) ["hello", "a", "world"] = [5,1,5] := rfl
 
 -- Theorem: map composition
 -- (f : α → β) (g : β → γ) (l : List α)
+
 theorem map_map_comp {α β γ : Type} (f : α → β) (g : β → γ) (l : List α) :
-  my_map (g ∘ f) l = my_map g (my_map f l) := by sorry
+  my_map (g ∘ f) l = my_map g (my_map f l) := by
+  induction' l with y ys ih
+  . simp [my_map]
+  . repeat rw [my_map]
+    rw [Function.comp]
+    simp [ih]
