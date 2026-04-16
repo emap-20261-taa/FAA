@@ -11,8 +11,10 @@ set_option tactic.hygienic false
 
 
 /-! more useful tactics
-  * `suffices P by X` -- To prove the goal, it is enough to prove `P` because of `X`.
-  * `observe h: P` -- same as have h: P := by exact? where observe is successful if exact? can find a proof.
+  * `suffices P by X` -- To prove the goal, it is enough to prove `P` because of
+    `X`.
+  * `observe h : P` -- same as `have h : P := by exact?` where observe is
+    successful if exact? can find a proof.
   * `plausible` -- Try to find a counter example
   * `cancel_denoms` -- try to cancel denominators of fraction
   * `positivity`-- Tactic solving goals of the form 0 ≤ x, 0 < x and x ≠ 0
@@ -31,7 +33,7 @@ example (A B C : Prop) (hAB : A → B) (hBC : B → C)  (hA : A) :C := by
 
 -- c.f. `have` tactics
 example (A B C : Prop) (hAB : A → B) (hBC : B → C)  (hA : A) :C := by
-  have: A → C := by
+  have : A → C := by
     trans B
     · exact hAB
     · exact hBC
@@ -41,7 +43,7 @@ example (A B C : Prop) (hAB : A → B) (hBC : B → C)  (hA : A) :C := by
 -- # `observe` tactic
 -- if `have` can be proved using exact?, so does `observe`
 example (A B C : Prop) (hAB : A → B) (hBC : B → C)  (hA : A) :C := by
-  observe: A → C
+  observe : A → C
   apply this
   exact hA
 
@@ -49,8 +51,10 @@ example (a :ℕ) (h: 3 ≤ a) : 0 ≤ a := by
   positivity
 
 -- plasible will try to find a counterexample
---example (a :ℤ) : 0 ≤ a := by
-  -- plausible
+/-
+example (a : ℕ) : 0 ≤ a := by
+  plausible
+-/
 
 -- # `cancel_denoms`
 -- try to cancel denominators of fraction
@@ -71,9 +75,9 @@ example (a b c :ℝ) (h : a / 5 + b / 4 < c) : 4*a + 5*b < 20*c := by
 
 -- Example
 def f : ℕ → ℤ
-  | 0   => 1
-  | 1   => 1
-  | n+2 => 2*f (n+1) - f n + 2
+  | 0     => 1
+  | 1     => 1
+  | n + 2 => 2 * f (n + 1) - f n + 2
 
 theorem f_closed_form (n : ℕ) : f n = n^2 - n + 1 := by
   induction n using Nat.twoStepInduction

@@ -71,6 +71,8 @@ example {S} : P → Q → R → S ↔ ((P ∧ Q ∧ R) → S) := by
 -/
 #check lt_trans
 
+#check 1 < 2
+
 example (x y z : ℝ) (hab : x < y) (hbc: y < z) : x < z := by
   exact lt_trans hab hbc
 

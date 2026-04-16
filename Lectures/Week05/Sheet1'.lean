@@ -138,10 +138,10 @@ end myOr
 
 -- generalize, replace, rwa tactics
 example (m: ℕ) (h: IsEven (m+2)) : IsEven m := by
-  --induction h
+  -- induction h
   -- Lean does not know that m+2 is a variable
-  generalize h_eq: (m+2) = k
-  replace h: IsEven k := by rwa [← h_eq]
+  generalize h_eq: (m+2) = k at h
+  --replace h : IsEven k := by rwa [← h_eq]
   induction' h
   · aesop
   · aesop
