@@ -44,7 +44,9 @@ theorem problem2 (n: ℕ) (h: 0 < n): (S n 1) = 1 := by sorry
 -- You may want to use the result from theorem problem2 to prove problem3
 theorem problem3 (n: ℕ): (S n 2) = 2^(n-1) - 1  := by sorry
 
+
 -- # Problem 4
+
 /-
 Define R(r,s):
   R(r,2) = r
@@ -53,24 +55,31 @@ Define R(r,s):
   Prove that R(r,s) ≤ (r+s-2).choose (r-1)
 -/
 
-def R (r s : ℕ ): ℕ :=
-  if r = 0 ∨ s = 0 then 0
-  else if r ≤ 1 ∨ s ≤ 1 then 1
-  else if r = 2 ∨ s = 2 then 2
-  else (R (r-1) s) + (R r (s-1))
+def R (r s : ℕ) : ℕ :=
+ if r = 0 ∨ s = 0 then 0
+ else if r ≤ 1 ∨ s ≤ 1 then 1
+ else if r = 2 ∨ s = 2 then 2
+ else R (r - 1) s + R r (s - 1)
 
 -- You may find this useful
 #check Nat.choose_eq_choose_pred_add
 
 -- Hint: you may find functional induction useful
-lemma problem4 (r s : ℕ): R r s ≤ (r+s-2).choose (r-1) := by sorry
+lemma problem4 (r s : ℕ): R r s ≤ (r+s-2).choose (r-1) := by
+  rw [Nat.choose_eq_choose_pred_add]
+  fun_induction R
+  . grind
+  . sorry
 
 
 -- # Problem 5.1
 
 -- Part 1: Defining interleave function
--- Define a function called interleave that takes two lists, xs and ys, and returns a new list where the elements of xs and ys are alternated.
--- If one list is longer than the other, the remaining elements of the longer list should be appended at the end.
+
+-- Define a function called interleave that takes two lists, xs and ys, and
+-- returns a new list where the elements of xs and ys are alternated. If one
+-- list is longer than the other, the remaining elements of the longer list
+-- should be appended at the end.
 
 def interleave : List ℕ → List ℕ → List ℕ  := sorry
 

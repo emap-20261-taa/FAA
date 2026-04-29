@@ -11,12 +11,12 @@ set_option tactic.hygienic false
 
 
 -- # Problem 1: Finding Min Recursively
-def minimum (a b:ℕ ): ℕ := if a < b then a else b
+def minimum (a b : ℕ) : ℕ := if a < b then a else b
 
 -- Consider the following FindMin function
 def FindMin (l : List ℕ) : ℕ :=
-  match h: l with
-  | [] => 0   -- Base case for empty list (0 is minimum in ℕ)
+  match h : l with
+  | []    => 0  -- base case for empty list (0 is minimum in ℕ)
   | x::xs =>
       if he: xs = [] then x
       else
@@ -32,7 +32,7 @@ def FindMin (l : List ℕ) : ℕ :=
         minimum (FindMin left) (FindMin right)
 termination_by l.length decreasing_by all_goals grind
 
-def Nat.MinOfList (a :ℕ ) (t: List ℕ) : Prop := ∀ y ∈ t, a ≤ y
+def Nat.MinOfList (a : ℕ) (t : List ℕ) : Prop := ∀ y ∈ t, a ≤ y
 
 -- You can use the following APIs.
 -- # In this problem, prove that the FindMin algorithm correctly returns the minimum element for any non-empty input list of size n.

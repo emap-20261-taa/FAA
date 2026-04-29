@@ -15,8 +15,8 @@ set_option tactic.hygienic false
 inductive Sorted: List ℕ  → Prop
   | nil : Sorted []
   | single (a : ℕ) : Sorted [a]
-  | cons (a b : ℕ) (t : List ℕ ) : a ≤ b → Sorted (b :: t) → Sorted (a :: b :: t)
-  | cons_min (a :ℕ) (t : List ℕ) : a.MinOfList t → Sorted (t) →  Sorted (a :: t)
+  | cons (a b : ℕ) (t : List ℕ) : a ≤ b → Sorted (b :: t) → Sorted (a :: b :: t)
+  | cons_min (a : ℕ) (t : List ℕ) : a.MinOfList t → Sorted t →  Sorted (a :: t)
 
 theorem sorted_min {x : ℕ} {xs : List ℕ} (hxs : Sorted (x :: xs)) :  x.MinOfList xs  := by
   cases hxs
@@ -28,7 +28,14 @@ theorem sorted_min {x : ℕ} {xs : List ℕ} (hxs : Sorted (x :: xs)) :  x.MinOf
       grind
   · exact a_1
 
-theorem sorted_is_preserved_by_min_cons {a : ℕ} {t : List ℕ} (hmin : a.MinOfList t) (ht : Sorted t) : Sorted (a :: t) := by
+theorem sorted_is_preserved_by_min_cons {a : ℕ} {t : List ℕ}
+  (hmin : a.MinOfList t)
+  (ht : Sorted t) : Sorted (a :: t) := by
   exact Sorted.cons_min a t hmin ht
 
-theorem sorted_suffix {x : ℕ} {xs : List ℕ} (hxs : Sorted (x :: xs)) : Sorted xs := sorry
+theorem sorted_suffix {x : ℕ} {xs : List ℕ}
+  (hxs : Sorted (x :: xs))
+  : Sorted xs := by
+  cases hxs
+  exact Sorted.nil
+  all_goals assumption
