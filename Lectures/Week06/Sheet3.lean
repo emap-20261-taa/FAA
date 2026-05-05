@@ -11,41 +11,40 @@ set_option tactic.hygienic false
 
 
 -- # Challenges in applying functional induction to divide-and-conquer algorithms
--- Sometimes, we cannot immediately call funtional induction even though the algoithm is recusive.
--- This is usually because the hypothesis is too specialized.
--- The key idea is to formulate a more general inductive hypothesis
+
+-- Sometimes, we cannot immediately call funtional induction even though the
+-- algorithm is recusive. This is usually because the hypothesis is too
+-- specialized. The key idea is to formulate a more general inductive hypothesis
 
 -- In this sheet, we walk through binary search on a sorted array as an example
 
--- Consider the following formulation of the sorted array
--- This version has fewer proof obligations because we don't have to worry about the indices (out-of-bounds)
+-- Consider the following formulation of the sorted array This version has fewer
+-- proof obligations because we don't have to worry about the indices
+-- (out-of-bounds)
 
-structure SortedArrayFun (n :ℕ) where
+structure SortedArrayFun (n : ℕ) where
   get : ℕ → ℕ
   size : ℕ := n
-  sorted: Monotone get
+  sorted : Monotone get
 
-#check SortedArrayFun
-#check SortedArrayFun.get
-#check SortedArrayFun.sorted
--- A function f is monotone if a ≤ b implies f a ≤ f b.
-#check Monotone
+def contains_bs {n : ℕ} (arr : SortedArrayFun n) (q : ℕ) : Option ℕ :=
+  bs_aux 0 (n - 1) (by omega)
+  where
+   bs_aux (a b : ℕ) (h : a ≤ b) : Option ℕ  :=
+    if h₁ : a = b then
+     if q = arr.get a then some a
+     else none
+    else
+     let mid := (a + b) / (2 : Nat)
+     if  q < arr.get mid then bs_aux a mid  (by omega)
+     else if  arr.get mid < q then bs_aux (mid + 1) b (by omega)
+     else some mid
 
-def contains_bs {n :ℕ }(arr : SortedArrayFun n) (q : ℕ) : Option ℕ :=
-  bs_aux 0 (n-1) (by omega)
-  where bs_aux (a b :ℕ) (h: a ≤ b): Option ℕ  :=
-  if h: a = b then
-    if q = arr.get a then some a
-    else none
-  else
-    let mid := (a+b)/(2 :ℕ )
-    if      q < arr.get mid then bs_aux a mid  (by omega)
-    else if  arr.get mid < q then bs_aux (mid+1) b (by omega)
-    else some mid
-
--- The property we need is: "Searching in the interval [a, b] finds q if and only if q is present in that interval."
-#check contains_bs.bs_aux
-lemma bs_aux_correctness (n q :ℕ)(arr : SortedArrayFun n) (a b :ℕ)(h_le : a ≤ b) :
+/-- The property we need is: "Searching in the interval [a, b] finds q if and
+only if q is present in that interval." -/
+lemma bs_aux_correctness (n q : ℕ)
+  (arr : SortedArrayFun n) (a b : ℕ)
+  (h_le : a ≤ b) :
   (∃ i, a ≤ i ∧ i ≤ b ∧ arr.get i = q) ↔ (contains_bs.bs_aux arr q a b h_le ≠ none) := by
     fun_induction contains_bs.bs_aux
     · simp_all
@@ -56,9 +55,39 @@ lemma bs_aux_correctness (n q :ℕ)(arr : SortedArrayFun n) (a b :ℕ)(h_le : a 
       subst this
       aesop
     · rw [← ih1]
-      sorry
+      constructor
+      . intro h1
+        obtain ⟨i, ih⟩ := h1
+        have h2 : i < mid := by
+          rw [← ih.2.2] at h_2
+          by_contra h2
+          simp at h2
+          apply arr.sorted at h2
+          apply Nat.not_le_of_lt h_2
+          assumption
+        use i
+        exact ⟨ih.1, ⟨Nat.le_of_lt h2, ih.2.2⟩⟩
+      . intro h1
+        obtain ⟨i, ih⟩ := h1
+        use i
+        exact ⟨ih.1, ⟨(by grind), ih.2.2⟩⟩
     · rw [← ih1]
-      sorry
+      constructor
+      . intro h1
+        obtain ⟨i, ih⟩ := h1
+        use i
+        have h2 : i > mid := by
+          rw [← ih.2.2] at h_3
+          by_contra h2
+          simp at h2
+          apply arr.sorted at h2
+          apply Nat.not_le_of_lt h_3
+          assumption
+        exact ⟨(by grind), ih.2⟩
+      . intro h1
+        obtain ⟨i, ih⟩ := h1
+        use i
+        grind
     · simp_all
       use mid
       grind

@@ -201,17 +201,28 @@ theorem merge_min_out (x : ℕ) (xs ys : List ℕ)
       simp [h]
 
 -- Exercise 2.4
-theorem merge_min_out_sym(x : ℕ) (xs ys : List ℕ)
-  (h_min_in_xs : ∀ y ∈ xs, x ≤ y) (h_min_in_ys : ∀ y ∈ ys, x ≤ y)
+theorem merge_min_out_sym (x : ℕ) (xs ys : List ℕ)
+  (h_min_in_xs : ∀ y ∈ xs, x ≤ y)
+  (h_min_in_ys : ∀ y ∈ ys, x ≤ y)
   : Merge ys (x :: xs)  = x :: Merge ys xs := by
   match ys with
-  | .nil =>
+  | [] =>
     cases xs
-    . simp [Merge]
-    . simp [Merge]
-  | .cons a as =>
-    have h₁ := h_min_in_ys a ; simp at h₁
-    nth_rw 1 [Merge]
-    by_cases h1 : x = a
-    simp [h1]
-    sorry
+    all_goals simp [Merge]
+  |  a :: as =>
+    conv =>
+     left
+     unfold Merge
+    split_ifs with h
+    swap
+    rfl
+    have : x ≤ a := by aesop
+    observe : x = a
+    subst this
+    suffices Merge as (x :: xs) = x :: Merge as xs by
+      rw [this]
+      rw [merge_min_out]
+      assumption
+    apply merge_min_out_sym
+    assumption
+    aesop

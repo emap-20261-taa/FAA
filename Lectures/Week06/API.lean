@@ -18,7 +18,8 @@ inductive Sorted: List ℕ  → Prop
   | cons (a b : ℕ) (t : List ℕ) : a ≤ b → Sorted (b :: t) → Sorted (a :: b :: t)
   | cons_min (a : ℕ) (t : List ℕ) : a.MinOfList t → Sorted t →  Sorted (a :: t)
 
-theorem sorted_min {x : ℕ} {xs : List ℕ} (hxs : Sorted (x :: xs)) :  x.MinOfList xs  := by
+theorem sorted_min {x : ℕ} {xs : List ℕ} (hxs : Sorted (x :: xs))
+  : x.MinOfList xs  := by
   cases hxs
   · simp
   · simp only [Nat.MinOfList, List.mem_cons, forall_eq_or_imp]
