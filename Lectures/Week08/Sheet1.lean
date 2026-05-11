@@ -19,7 +19,7 @@ set_option tactic.hygienic false
 -- Separation of concerns: the correctness proof and running time proof should
 -- not interfere to each other
 
-def len : List ℕ →  ℕ
+def len : List ℕ → ℕ
 | [] => 0
 | _ :: xs => 1 + len xs
 
@@ -71,7 +71,7 @@ def sum : List ℕ → ℕ
 | [] => 0
 | x :: xs => x + sum xs
 
--- TODO: Prove correctness
+-- Prove correctness
 theorem sumT_correctness (xs : List ℕ): (sumT xs).ret = sum xs := by
   induction xs with
   | nil =>
@@ -81,9 +81,14 @@ theorem sumT_correctness (xs : List ℕ): (sumT xs).ret = sum xs := by
     rw [ih, sum]
 
 
--- TODO: Prove time complexity
+-- Prove time complexity
 theorem sumT_time (xs : List ℕ): (sumT xs).time = xs.length := by
-  sorry
+  induction xs
+  · rfl
+  · simp only [sumT, bind, TimeM.tick, TimeM.time_of_bind]
+    rw [tail_ih]
+    rw [List.length]
+
 
 -- ============================================================================
 -- EXERCISE 2: Reverse a list
