@@ -54,29 +54,27 @@ def compute2' (a b c d : ℕ) : Option ℕ := do
 #eval compute2' 100 0 5 2
 #eval compute2' 100 2 0 2
 
--- Monad allows us to focus on the main logic while handling side-effect seperately,
--- enabling separation of concerns.
+-- Monad allows us to focus on the main logic while handling side-effect
+-- seperately, enabling separation of concerns.
 
 -- ## What is Monad?
 #check Monad
 #print Monad
 
--- Intuitively, the monad is like duct tape. It ``glues`` things together. More preciesly, it ``composes`` things.
--- High-level Explanation
+-- Intuitively, the monad is like duct tape. It ``glues`` things together. More
+-- preciesly, it ``composes`` things. High-level Explanation
 
 def HalfExact (x : ℕ) : Option ℕ :=
   if Even x then some (x/2) else none
 
-#check HalfExact
-
 #eval HalfExact 2
 #eval HalfExact 3
---#eval HalfExact (some 2)
+-- #eval HalfExact (some 2)
 
 -- using bind operation
 #eval some 10 >>= HalfExact
 #eval some 3 >>= HalfExact
-#eval pure 6 >>= HalfExact >>= HalfExact >>= HalfExact
+#eval pure 6 >>= HalfExact >>= HalfExact
 #eval none >>= HalfExact
 
 
@@ -91,18 +89,21 @@ class Monad (m : Type → Type) where
 
 #check Monad
 
--- In lean, a class is a structure parameterized by some types (in this case, a type constructor)
--- the implementation of each operation depends on specific instantiation of the type
--- deferred to `instantiate` using `typeclass resolution`, which automatically synthesize the specific instance.
+-- In lean, a class is a structure parameterized by some types (in this case, a
+-- type constructor) the implementation of each operation depends on specific
+-- instantiation of the type deferred to `instantiate` using `typeclass
+-- resolution`, which automatically synthesize the specific instance.
 
 #check Monad.pure
 #check Monad.bind
 
--- Here, the sqaure brackets indiates that the instance of type : Monad m is `instance implicit`.
+-- Here, the square brackets indiates that the instance of type : Monad m is
+-- `instance implicit`.
 
 -- For example, we want to instantiate Monad instance for Option
 -- Monad instance for Option
 #check Monad Option
+
 -- We can register the instances by:
 instance : Monad Option where
   pure x := some x
@@ -111,6 +112,7 @@ instance : Monad Option where
     | none => none
     | some x => f x
 
+#synth Monad Option
 /- Think the monad as a box with content a : α
 In short, `pure a` just wraps the value a in a box,
 while    `bind ma f` (written as `ma >>= f`) takes a monad `ma`, and a function `f` that returms a monad, and it returns a monad.
@@ -121,7 +123,9 @@ while    `bind ma f` (written as `ma >>= f`) takes a monad `ma`, and a function 
 -- Try safeDivide
 #eval safeDivide 4 2
 #eval safeDivide 4 0
+
 #eval some 4 >>= (fun r => safeDivide r 2)
+#eval some 4 >>= safeDivide 2
 
 -- ============================================
 -- Example 1: Using bind directly (with >>=)
@@ -160,9 +164,9 @@ def example2 : Option ℕ :=
 
 -- Compute ((100 / 2) / 5) + 3 using bind
 def example3 : Option ℕ :=
-  safeDivide 100 2 >>= fun r1 =>   -- r1 = 50
-  safeDivide r1 5 >>= fun r2 =>    -- r2 = 10
-  pure (r2 + 3)                     -- Wrap result back in box
+  safeDivide 100 2 >>= (fun r1 =>   -- r1 = 50
+   safeDivide r1 5 >>= (fun r2 =>   -- r2 = 10
+    pure (r2 + 3)))               -- Wrap result back in box
 
 #eval example3  -- some 13
 

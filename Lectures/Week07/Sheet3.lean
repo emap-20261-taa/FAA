@@ -142,7 +142,12 @@ Part A: Implement using do notation
 -/
 
 def computeExpr (a b c d e f : ℕ) : Option ℕ := do
-  sorry  -- Your code here
+  let r₁ ← safeDivide a b
+  let r₂ ← safeDivide c d
+  let r₃ ← safeDivide e f
+  let r₄ ← safeMult r₁ r₂
+  let r₅ ← safeAdd r₄ r₃
+  pure r₅
 
 /-
 Part B: Implement the SAME function WITHOUT do notation
@@ -150,15 +155,19 @@ Part B: Implement the SAME function WITHOUT do notation
 -/
 
 def computeExpr' (a b c d e f : ℕ) : Option ℕ :=
-  sorry  -- Your code here
+  safeDivide a b >>= fun r₁ =>
+  safeDivide c d >>= fun r₂ =>
+  safeDivide e f >>= fun r₃ =>
+  safeMult r₁ r₂ >>= fun r₄ =>
+  safeAdd r₄ r₃  >>= fun r₅ => pure r₅
 
 
 -- Test cases (uncomment after implementing):
--- #eval computeExpr 20 4 15 3 10 2    -- some 30  because (20/4) * (15/3) + (10/2) = 5 * 5 + 5 = 30
--- #eval computeExpr 20 0 15 3 10 2    -- none     (division by zero in first division)
--- #eval computeExpr 20 4 15 0 10 2    -- none     (division by zero in second division)
--- #eval computeExpr 20 4 15 3 10 0    -- none     (division by zero in third division)
--- #eval computeExpr 12 3 8 2 6 3      -- some 18  because (12/3) * (8/2) + (6/3) = 4 * 4 + 2 = 18
+#eval computeExpr 20 4 15 3 10 2    -- some 30  because (20/4) * (15/3) + (10/2) = 5 * 5 + 5 = 30
+#eval computeExpr 20 0 15 3 10 2    -- none     (division by zero in first division)
+#eval computeExpr 20 4 15 0 10 2    -- none     (division by zero in second division)
+#eval computeExpr 20 4 15 3 10 0    -- none     (division by zero in third division)
+#eval computeExpr 12 3 8 2 6 3      -- some 18  because (12/3) * (8/2) + (6/3) = 4 * 4 + 2 = 18
 
 
 namespace FAA
@@ -173,19 +182,20 @@ class LawfulMonad (m : Type → Type)
       (ma : m α) :
     ((ma >>= f)>>=  g) = (ma >>= (fun a ↦ f a >>= g))
 
--- The structure takes over the fields and syntax extensions from the Bind and Pure structures,
--- which define the bind and pure operations for m and provide related syntactic conveniences.
+-- The structure takes over the fields and syntax extensions from the Bind and
+-- Pure structures, which define the bind and pure operations for m and provide
+-- related syntactic conveniences.
 
--- To use this definition with a specific monad,
--- we need to provide the type constructor m (for example, Option),
--- along with the bind and pure functions, and verify that they satisfy the required monad laws.
+-- To use this definition with a specific monad, we need to provide the type
+-- constructor m (for example, Option), along with the bind and pure functions,
+-- and verify that they satisfy the required monad laws.
 
 
 --------------------------------------------------------------------------------
 -- Exercise 1: Identity Monad (Warm-up)
 --------------------------------------------------------------------------------
--- The identity monad just wraps a value with no additional structure.
--- Our first monad is the trivial monad `m := id` (i.e., `m := (fun α ↦ α)`). -/
+-- The identity monad just wraps a value with no additional structure. Our first
+-- monad is the trivial monad `m := id` (i.e., `m := (fun α ↦ α)`). -/
 
 def id.pure {α : Type} : α → id α
   | a => a
@@ -199,11 +209,17 @@ instance id.LawfulMonad : LawfulMonad id :=
   { pure       := id.pure
     bind       := id.bind
     pure_bind  :=
-      by sorry
+      by
+       intro a b c f
+       rw [id.pure, id.bind]
     bind_pure  :=
-      by sorry
+      by
+       intro a ma
+       rw [id.bind, id.pure]
     bind_assoc :=
-      by sorry
+      by
+       intro a b c f g ma
+       grind [id.bind]
          }
 
 --------------------------------------------------------------------------------
@@ -220,15 +236,27 @@ def Option.bind {α β : Type} :
   | Option.none,   _ => Option.none
   | Option.some a, f => f a
 
+
 instance Option.LawfulMonad : LawfulMonad Option :=
   { pure       := Option.pure
     bind       := Option.bind
     pure_bind  :=
-      by sorry
+      by
+       intro α β a f
+       rw [Option.pure, Option.bind]
     bind_pure  :=
-      by sorry
+      by
+       intro α ma
+       rw [Option.pure]
+       cases ma
+       all_goals rw [Option.bind]
     bind_assoc :=
-      by sorry }
+      by
+        intro α β γ f g ma
+        cases ma
+        all_goals repeat rw [Option.bind]
+         }
+
 
 -- Hint: You'll need to case split on Option values (none vs some)
 -- Use: cases ma with | none => ... | some a => ...
@@ -252,12 +280,11 @@ def Action.write {σ : Type} (s : σ) : Action σ Unit
 /- `Action.pure` leaves the state unchanged, similar to a `return` statement.
    `Action.bind` sequences two operations, threading state from one to the next. -/
 
-def Action.pure {σ α : Type} (a : α) : Action σ α
-  | s => (a, s)
+def Action.pure {σ α : Type} (a : α) : Action σ α :=
+  fun s => (a, s)
 
 def Action.bind {σ : Type} {α β : Type} (ma : Action σ α)
-      (f : α → Action σ β) :
-    Action σ β
+  (f : α → Action σ β) : Action σ β
   | s =>
     match ma s with
     | (a, s') => f a s'
@@ -267,8 +294,31 @@ instance Action.LawfulMonad {σ : Type} :
   { pure       := Action.pure
     bind       := Action.bind
     pure_bind  :=
-      by sorry
+      by
+       intro α β a f
+       rfl
     bind_pure  :=
-      by sorry
+      by
+       intro α ma
+       rfl
     bind_assoc :=
-      by sorry}
+      by
+       intro α β γ f g ma
+       rfl  }
+
+
+def increasingly : List ℕ → Action ℕ (List ℕ)
+| [] => pure []
+| (n :: ns) =>
+ do
+  let prev ← Action.read
+  if n < prev then
+   increasingly ns
+  else
+   do
+    Action.write n
+    let ns' ← increasingly ns
+    pure (n :: ns')
+
+
+#eval increasingly [1,3,2] 0
