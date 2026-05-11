@@ -320,5 +320,16 @@ def increasingly : List ℕ → Action ℕ (List ℕ)
     let ns' ← increasingly ns
     pure (n :: ns')
 
+def increasingly' : List ℕ → Action ℕ (List ℕ)
+| []      => pure []
+| n :: ns =>
+  Action.read >>= fun prev =>
+    if n < prev then
+      increasingly' ns
+    else
+      Action.write n >>= fun _ =>
+        increasingly' ns >>= fun ns' =>
+          pure (n :: ns')
 
-#eval increasingly [1,3,2] 0
+#eval increasingly  [1,3,2] 0
+#eval increasingly' [1,3,2] 0
