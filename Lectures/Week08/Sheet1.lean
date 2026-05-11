@@ -11,13 +11,17 @@ set_option autoImplicit false
 set_option tactic.hygienic false
 
 -- # Q: How to analyze time complexity?
--- We will instrument the code to track the time. However, we do not want to interfere the correctness analysis.
--- We learn an elegant way to do this using Moad
--- # Separation of concerns: the correctness proof and running time proof should not interfere to each other
+
+-- We will instrument the code to track the time. However, we do not want to
+-- interfere the correctness analysis. We learn an elegant way to do this using
+-- Monad
+
+-- Separation of concerns: the correctness proof and running time proof should
+-- not interfere to each other
 
 def len : List ℕ →  ℕ
 | [] => 0
-| _ :: xs => 1+ len xs
+| _ :: xs => 1 + len xs
 
 -- lenT with do notations
 def lenT : List ℕ → TimeM ℕ
@@ -40,13 +44,13 @@ theorem lenT_correctness (xs : List ℕ): (lenT xs).ret = len xs := by
     rw [tail_ih]
     rfl
 
-theorem lenT_time (xs : List ℕ ): (lenT xs).time = 2 *(len xs) := by
+theorem lenT_time (xs : List ℕ ): (lenT xs).time = 2 * (len xs) := by
   induction xs
   · rfl
-  · simp only [lenT, bind, TimeM.tick, PUnit.zero_eq, TimeM.time_of_bind]
+  · simp only [lenT, bind, TimeM.tick, TimeM.time_of_bind]
     rw [tail_ih]
     rw [show len (head :: tail) = 1 + len tail from rfl]
-    omega
+    linarith
 
 
 -- ============================================================================
@@ -57,8 +61,11 @@ theorem lenT_time (xs : List ℕ ): (lenT xs).time = 2 *(len xs) := by
 -- Expected time complexity: n where n is the length of the list
 
 def sumT : List ℕ → TimeM ℕ
-| [] => sorry
-| x :: xs => sorry
+| [] =>
+  pure 0
+| x :: xs => do
+   let s ← sumT xs
+   ✓ (x + s)
 
 def sum : List ℕ → ℕ
 | [] => 0
@@ -66,7 +73,13 @@ def sum : List ℕ → ℕ
 
 -- TODO: Prove correctness
 theorem sumT_correctness (xs : List ℕ): (sumT xs).ret = sum xs := by
-  sorry
+  induction xs with
+  | nil =>
+    rfl
+  | cons a as ih =>
+    simp only [sumT, bind, TimeM.tick, TimeM.ret_bind]
+    rw [ih, sum]
+
 
 -- TODO: Prove time complexity
 theorem sumT_time (xs : List ℕ): (sumT xs).time = xs.length := by
