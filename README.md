@@ -1,5 +1,7 @@
 # Formalizing Analysis of Algorithms, Autumn 2025
 
+https://sites.google.com/view/sorrachai/teaching
+
 ## Local installation
 
 This setup process typically takes 1-2 hours. If you have any problems, please reach out to our [TA](mailto:haocheng.wang@inf.ethz.ch) for help. 

@@ -27,6 +27,20 @@ structure SortedArrayFun (n : ℕ) where
   size : ℕ := n
   sorted : Monotone get
 
+def myArr : SortedArrayFun 2 where
+  get := fun i =>
+    match i with
+    | 0 => 10
+    | 1 => 22
+    | _ => 30
+  sorted := by
+   intro a b h
+   grind
+
+#eval myArr.get 0  -- 0
+#eval myArr.get 1  -- 2
+#eval myArr.get 4  -- 8
+
 def contains_bs {n : ℕ} (arr : SortedArrayFun n) (q : ℕ) : Option ℕ :=
   bs_aux 0 (n - 1) (by omega)
   where
@@ -92,15 +106,16 @@ lemma bs_aux_correctness (n q : ℕ)
       use mid
       grind
 
-theorem contains_bs_correctness (n q :ℕ)(h: 0 < n)(arr : SortedArrayFun n):
-  (∃ i, i < n ∧ arr.get i = q) ↔ (contains_bs arr q ≠ none) := by
+theorem contains_bs_correctness (n q : ℕ) (h : 0 < n)
+  (arr : SortedArrayFun n)
+  : (∃ i, i < n ∧ arr.get i = q) ↔ (contains_bs arr q ≠ none) := by
   unfold contains_bs
-  have: 0 ≤ n-1 := by omega
-  have := bs_aux_correctness n q arr 0 (n-1) (by omega)
+  have h₁ : 0 ≤ n - 1 := by omega
+  have h₂ := bs_aux_correctness n q arr 0 (n-1) (by grind)
   grind
 
+
 /-
--- Hints below
 theorem subinterval_to_interval_qlt {n : ℕ} (arr : SortedArrayFun n) (q a mid b: ℕ)
   (h_bounds : a ≤ mid ∧ mid ≤ b)  -- [[a q⁻¹ mid] b]:
   (h_q: q < arr.get mid):

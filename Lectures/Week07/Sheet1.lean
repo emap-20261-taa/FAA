@@ -15,7 +15,7 @@ set_option tactic.hygienic false
 def has_sqrt (n : ℕ) : Prop := ∃ m : ℕ, m * m = n
 
 noncomputable
-def sqrt_if_perfect (n : ℕ) (h : has_sqrt n) : ℕ  := h.choose
+def sqrt_if_perfect (n : ℕ) (h : has_sqrt n) : ℕ := h.choose
 -- obtain
 -- sorry --? How to extract the witness
 
@@ -29,7 +29,8 @@ def witness_perfect_spec (n : ℕ) (h : has_sqrt n) := h.choose_spec
 #check witness_perfect
 #check witness_perfect_spec
 
--- Side effect: this choose function relies on the axiom of choice, require marking the corresponding function `noncomputable`.
+-- Side effect: this choose function relies on the axiom of choice, require
+-- marking the corresponding function `noncomputable`.
 
 -- Sorts are the classifications of types.
 -- We can think of Sort u as a type with differnet level of universes.
@@ -42,9 +43,11 @@ def witness_perfect_spec (n : ℕ) (h : has_sqrt n) := h.choose_spec
 
 #print Classical.choice
 
--- Classical.choice takes a proof h that a type α is nonempty and produces an element of α.
--- However, since h lives in Prop, it doesn’t provide any constructive information about which element exists.
--- As a result, Classical.choice is noncomputable — it asserts existence but gives no way to actually find the element.
+-- Classical.choice takes a proof h that a type α is nonempty and produces an
+-- element of α. However, since h lives in Prop, it doesn’t provide any
+-- constructive information about which element exists. As a result,
+-- Classical.choice is noncomputable — it asserts existence but gives no way to
+-- actually find the element.
 
 theorem Nat.Nonempty : Nonempty ℕ := by use 0
 
@@ -52,8 +55,10 @@ theorem Nat.Nonempty : Nonempty ℕ := by use 0
 
 noncomputable def arbitraryNat : ℕ := Classical.choice Nat.Nonempty
 
--- In the analysis of algorithms we do not require computability, and using this can be more conveinent.
--- If required, one can remove computatbility assumption by
+-- In the analysis of algorithms we do not require computability, and using this
+-- can be more conveinent. If required, one can remove computatbility assumption
+-- by
+
 -- (1) directly implement an algorithm that outputs it, or
 -- (2) show that a type if finite
 
@@ -66,9 +71,9 @@ def sqrt_if_perfect2 (n : ℕ) (h : has_sqrt n) : some_prop := by
   obtain ⟨n,nh⟩ := h
   sorry
 
--- The key architectural decision in Lean: Prop is proof-irrelevant and computationally erased.
--- The `obtain` tactic only work in the Prop (i.e., proof mode).
--- whereas `Classical.choose` lifts from Prop to Type.
+-- The key architectural decision in Lean: Prop is proof-irrelevant and
+-- computationally erased. The `obtain` tactic only work in the Prop (i.e.,
+-- proof mode). whereas `Classical.choose` lifts from Prop to Type.
 
 #check Classical.choose
 -- Classical.choose : {α : Sort u} → (∃ x, p x) → α
@@ -77,8 +82,10 @@ def sqrt_if_perfect2 (n : ℕ) (h : has_sqrt n) : some_prop := by
 
 
 -- Upshot:
--- We can use obtain tactics to extract witness in the proof mode.
--- To go outside of proof mode, use Classical.choose to extract witness as a type and use Classical.choose_spec to access its property
+
+-- We can use obtain tactics to extract witness in the proof mode. To go outside
+-- of proof mode, use Classical.choose to extract witness as a type and use
+-- Classical.choose_spec to access its property
 
 -- Classical.choice = function that returns an arbitrary element of a nonempty type
 -- Classical.choose = function that returns a witness given a proof of an ∃
@@ -90,12 +97,13 @@ def Bitonic (f : ℕ → ℤ) (n : ℕ) : Prop :=
     StrictMonoOn f (Set.Icc 0 k) ∧   -- nondecreasing on [0,k]
     StrictAntiOn f (Set.Ici k)       -- nonincreasing on [k, ∞)
 
--- A "bitonic" array is an array that strictly increases and then strictly decreases, like [1, 4, 8, 10, 5, 2]. The goal is to find the "peak" element (10). The search logic is:
--- Look at mid and mid+1.
--- If arr.get mid < arr.get (mid+1), the peak must be in the right half.
--- If arr.get mid > arr.get (mid+1), the peak is in the left half (and mid could be it).
+-- A "bitonic" array is an array that strictly increases and then strictly
+-- decreases, like [1, 4, 8, 10, 5, 2]. The goal is to find the "peak" element
+-- (10). The search logic is: Look at mid and mid+1. If arr.get mid < arr.get
+-- (mid+1), the peak must be in the right half. If arr.get mid > arr.get
+-- (mid+1), the peak is in the left half (and mid could be it).
 
-structure BitonicSortedArrayFun (n :ℕ) where
+structure BitonicSortedArrayFun (n : ℕ) where
   get : ℕ → ℤ
   size : ℕ := n
   bitonic: Bitonic get n
@@ -108,57 +116,58 @@ def example1 : BitonicSortedArrayFun 5 := ⟨
     simp [Bitonic]
     use 2
     simp [StrictMonoOn,StrictAntiOn]
-    bound
-⟩
+    bound ⟩
 
 #check example1
 
 -- Example 2:
 def example2 : BitonicSortedArrayFun 100 where
-  get := fun i => 2-i
+  get := fun i => 2 - i
   bitonic := by
     use 0
     simp [StrictMonoOn,StrictAntiOn]
 
 -- This property appears in the analysis, marking noncomoputable is fine.
 noncomputable
-def BitonicSortedArrayFun.peak_idx {n :ℕ} (arr: BitonicSortedArrayFun n) := (arr.bitonic).choose
+def BitonicSortedArrayFun.peak_idx {n : ℕ} (arr: BitonicSortedArrayFun n)
+  : ℕ :=
+  (arr.bitonic).choose
 
-lemma BitonicSortedArrayFun.peak_idx_spec {n :ℕ} (arr: BitonicSortedArrayFun n) : arr.peak_idx < n ∧
-  StrictMonoOn arr.get (Set.Icc 0 arr.peak_idx) ∧ StrictAntiOn arr.get (Set.Ici arr.peak_idx) := (arr.bitonic).choose_spec
+lemma BitonicSortedArrayFun.peak_idx_spec {n : ℕ} (arr: BitonicSortedArrayFun n)
+  : arr.peak_idx < n ∧
+  StrictMonoOn arr.get (Set.Icc 0 arr.peak_idx) ∧ StrictAntiOn arr.get (Set.Ici arr.peak_idx)
+  := (arr.bitonic).choose_spec
 
--- The followings consist of exercises to get familiar with choose and choose_spec
+-- The followings consist of exercises to get familiar with choose and
+-- choose_spec
 
 -- Example 1: Prove the peak index is bounded
-lemma BitonicSortedArrayFun.peak_idx_lt_size {n : ℕ} (arr : BitonicSortedArrayFun n) :
-    arr.peak_idx < n := by
-
-    have:= arr.peak_idx_spec
-    exact this.1
+lemma BitonicSortedArrayFun.peak_idx_lt_size {n : ℕ} (arr : BitonicSortedArrayFun n)
+  : arr.peak_idx < n := by
+  have h₁ := arr.peak_idx_spec
+  exact h₁.1
 
 #print axioms BitonicSortedArrayFun.peak_idx_lt_size
 #check propext
 #check Classical.choice
 
 -- Exercise 2: Prove monotonicity up to peak
-lemma BitonicSortedArrayFun.mono_before_peak {n : ℕ} (arr : BitonicSortedArrayFun n) :
-    StrictMonoOn arr.get (Set.Icc 0 arr.peak_idx) := by
-    have:= arr.peak_idx_spec
-    grind
+lemma BitonicSortedArrayFun.mono_before_peak {n : ℕ} (arr : BitonicSortedArrayFun n)
+  : StrictMonoOn arr.get (Set.Icc 0 arr.peak_idx) := by
+  have h₁ := arr.peak_idx_spec
+  grind
 
--- Exercise 3: Prove that any element before peak is less than peak value
--- Hint: Combine choose_spec with StrictMonoOn properties
+-- Exercise 3: Prove that any element before peak is less than peak value. Hint:
+-- Combine choose_spec with StrictMonoOn properties
 lemma BitonicSortedArrayFun.before_peak_lt_peak {n : ℕ} (arr : BitonicSortedArrayFun n)
-    (i : ℕ) (hi : i < arr.peak_idx) :
-    arr.get i < arr.get arr.peak_idx := by
-    have:= arr.peak_idx_spec
-    simp_all [StrictMonoOn]
-    grind
+    (i : ℕ) (hi : i < arr.peak_idx)
+    : arr.get i < arr.get arr.peak_idx := by
+    have h₁ := arr.peak_idx_spec
+    grind [StrictMonoOn]
 
 -- Exercise 4: Prove that any element after peak is less than peak value
 lemma BitonicSortedArrayFun.after_peak_lt_peak {n : ℕ} (arr : BitonicSortedArrayFun n)
-    (i : ℕ) (hi : i > arr.peak_idx) :
-    arr.get i < arr.get arr.peak_idx := by
-    have:= arr.peak_idx_spec
-    simp_all [StrictAntiOn]
-    grind
+    (i : ℕ) (hi : i > arr.peak_idx)
+    : arr.get i < arr.get arr.peak_idx := by
+    have h₁ := arr.peak_idx_spec
+    grind [StrictAntiOn]
