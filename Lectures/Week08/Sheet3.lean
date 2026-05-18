@@ -4,17 +4,30 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sorrachai Yingchareonthawornchai
 -/
 
-import Mathlib.Tactic -- imports all of the tactics in Lean's maths library
+import Mathlib.Tactic
 import Lectures.Week08.Sheet2
 import Lectures.Week08.API
 
 -- Running Time Analysis
+
 set_option autoImplicit false
 set_option tactic.hygienic false
 
 -- The following helper lemmas are useful
+
 @[simp] theorem merge_time (xs ys : List ℕ) :
-  (merge xs ys).time = xs.length + ys.length := by sorry
+  (merge xs ys).time = xs.length + ys.length := by
+  induction' xs with a as ih₁ generalizing ys
+  . simp [merge,merge.go]
+  . simp [merge]
+    induction' ys with b bs ih₂
+    . simp [merge.go]
+    . by_cases h : a ≤ b
+      . simp [merge.go, h]
+        specialize ih₁ (b :: bs)
+        grind [merge]
+      . simp [merge.go, h]
+        grind
 
 @[simp] theorem merge_ret_length_eq_sum (xs ys : List ℕ) :
   (merge xs ys).ret.length = xs.length + ys.length := by sorry
@@ -61,7 +74,8 @@ def MS_REC_SIMP : ℕ → ℕ
   else
     2*MS_REC_SIMP (n/2) + n
 
-theorem MS_REC_SIMP_EQ (n : ℕ) :   (MS_REC (2^n))= (MS_REC_SIMP (2^n))  := by
+theorem MS_REC_SIMP_EQ (n : ℕ)
+  : (MS_REC (2^n)) = (MS_REC_SIMP (2^n))  := by
   induction' n  with n ih
   · unfold MS_REC_SIMP MS_REC
     simp only [↓reduceIte]
@@ -71,7 +85,7 @@ theorem MS_REC_SIMP_EQ (n : ℕ) :   (MS_REC (2^n))= (MS_REC_SIMP (2^n))  := by
     split
     next h =>
       subst h
-      simp_all only [zero_add, Nat.pow_eq_one, OfNat.ofNat_ne_one, Nat.add_eq_zero, one_ne_zero, and_false, or_self]
+      simp_all only [zero_add, Nat.pow_eq_one, OfNat.ofNat_ne_one]
     next h =>
       simp_all only [Nat.add_right_cancel_iff]
       rw [← heq]
@@ -86,21 +100,23 @@ theorem MS_REC_SIMP_EQ_CLOSED (n : ℕ) : MS_REC_SIMP (2^n) = 2^n * n := by
     simp_all only
     split
     next heq =>
-      simp_all only [Nat.pow_eq_zero, OfNat.ofNat_ne_zero, ne_eq, Nat.add_eq_zero, one_ne_zero, and_false,
-        not_false_eq_true, and_true]
+      simp_all only [Nat.pow_eq_zero, OfNat.ofNat_ne_zero, ne_eq,
+        Nat.add_eq_zero_iff, one_ne_zero, and_false, not_false_eq_true,
+        and_true]
     next heq =>
       simp_all only [Nat.succ_eq_add_one]
       split
       next h =>
         subst h
-        simp_all only [zero_add, Nat.pow_eq_one, OfNat.ofNat_ne_one, Nat.add_eq_zero, one_ne_zero, and_false, or_self]
+        simp_all only [zero_add, Nat.pow_eq_one, OfNat.ofNat_ne_one,
+          Nat.add_eq_zero_iff, one_ne_zero, and_false, or_self]
       next h =>
         rw [← heq]
         grind
 
 -- The time is written assuming the length of the list is a power of two (for simplicity).
 theorem MStimeBound (xs : List ℕ) (h : ∃ k, xs.length = 2 ^ k) :
-  (mergeSort xs).time = xs.length*(Nat.log 2 xs.length)  := by
+  (mergeSort xs).time = xs.length * (Nat.log 2 xs.length)  := by
   rw [mergeSort_time_eq_MS_REC]
   obtain ⟨k,hk⟩ := h
   rw [hk,MS_REC_SIMP_EQ,MS_REC_SIMP_EQ_CLOSED]
