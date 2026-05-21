@@ -24,7 +24,7 @@ def merge (xs ys : List ℕ) : TimeM (List ℕ) :=
   go xs ys
 
 def mergeSort (xs : List ℕ) : TimeM (List ℕ) :=  do
-  if xs.length < 2 then return xs
+  if xs.length < 2 then ✓ xs, 0
   else
     let half  := xs.length / 2
     let left  :=  xs.take half
