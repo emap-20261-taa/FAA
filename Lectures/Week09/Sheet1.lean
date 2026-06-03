@@ -5,8 +5,10 @@ Authors: Sorrachai Yingchareonthawornchai
 -/
 
 import Mathlib.Tactic
-import Mathlib.Combinatorics.SimpleGraph.Walk
 
+-- import Mathlib.Combinatorics.SimpleGraph.Walk
+import Mathlib.Combinatorics.SimpleGraph.Init
+import Mathlib.Data.Sym.Sym2
 
 namespace FAA
 
@@ -14,16 +16,40 @@ structure SimpleGraph (V : Type u) where
   /-- The adjacency relation of a simple graph. -/
   Adj : V → V → Prop
   symm : Symmetric Adj
-  loopless : Irreflexive Adj
+  loopless : Std.Irrefl Adj
 
 namespace SimpleGraph
 
-variable {ι : Sort*} {V : Type u} (G : SimpleGraph V) {a b c u v w : V}
+/-
+inductive myR : Nat → Nat → Prop where
+  | r0 : myR 0 1
+  | r1 : myR 1 2
+  | r2 : myR 2 3
+  | r3 : myR 3 1
+  | rS {a b : Nat} : a ≠ b → myR a b → myR b a
 
-#check G
+example : SimpleGraph.mk myR (by grind [Symmetric, myR])
+   (by
+    refine { irrefl := ?_ }
+    intro a h
+    cases h with
+    | rS h1 h2 => trivial) |>.Adj 0 2 → False  := by
+  simp
+  intro h
+  cases h with
+  | rS h1 h2 =>
+    apply myR.rS at h2
+    sorry
+-/
+
+-- why Sort*?
+variable {ι : Sort*} {V : Type u}
+  (G : SimpleGraph V) {a b c u v w : V}
+
 
 /-- `G.neighborSet v` is the set of vertices adjacent to `v` in `G`. -/
--- def neighborSet (v : V) : Set V := {w | G.Adj v w}
+
+def neighborSet (v : V) : Set V := {w | G.Adj v w}
 
 inductive Walk : V → V → Type u
   | nil {u : V} : Walk u u
@@ -46,10 +72,8 @@ def triangle : SimpleGraph (Fin 3) where
     (u = 0 ∧ v = 1) ∨ (u = 1 ∧ v = 0) ∨  -- edge 0-1
     (u = 1 ∧ v = 2) ∨ (u = 2 ∧ v = 1) ∨  -- edge 1-2
     (u = 2 ∧ v = 0) ∨ (u = 0 ∧ v = 2)    -- edge 2-0
-  symm := by aesop_graph
-  loopless := by simp_all [Irreflexive]
-
-#check triangle
+  symm := by grind [Symmetric]
+  loopless := by grind [Std.Irrefl]
 
 def triangle_walk : triangle.Walk 0 2 :=
   SimpleGraph.Walk.cons (by simp [triangle] : triangle.Adj 0 1)
@@ -90,8 +114,12 @@ lemma length_reverse {u v : V} (p : G.Walk u v) : p.reverse.length = p.length :=
 
 /-- Exercise : The length of appended walks is the sum of their lengths -/
 lemma length_append {u v w : V} (p : G.Walk u v) (q : G.Walk v w) :
-    (p.append q).length = p.length + q.length := sorry
-
+    (p.append q).length = p.length + q.length := by
+  fun_induction append
+  · aesop
+  · expose_names
+    simp [length, ih1]
+    omega
 
 
 @[symm]
@@ -114,23 +142,42 @@ theorem reachable_trans {u v w : V} (huv : G.Reachable u v) (hvw : G.Reachable v
 
 
 -- Example
-lemma connected_iff_exists_forall_reachable [nonempty : Nonempty V]: G.PreConnected ↔ ∃ v, ∀ w, G.Reachable v w := by
+lemma connected_iff_exists_forall_reachable [nonempty : Nonempty V]
+  : G.PreConnected ↔ ∃ v, ∀ w, G.Reachable v w := by
   constructor
-  · sorry
+  · intro h
+    apply nonempty.elim
+    intro v
+    use v
+    -- unfold PreConnected at h
+    apply h
   · intro h
     obtain ⟨v,h⟩ := h
     simp [PreConnected]
-    sorry
+    intro a b
+    have h1 := h a
+    have h2 := h b
+    unfold Reachable at h1 h2
+    have w1 := h1.some
+    have w2 := h2.some
+    have w3 := w1.reverse.append w2
+    unfold Reachable
+    use w3 -- exact Nonempty.intro w3
+
 
 -- Exercise
 lemma preconnected_iff_forall_reachable :
     G.PreConnected ↔ ∀ u v : V, G.Reachable u v := by
-  sorry
+  simp [PreConnected]
 
 -- Exercise
 lemma exists_central_vertex_if_connected [Fintype V] [Nonempty V]
     (hG : G.PreConnected) :
     ∃ v : V, ∀ w : V, ∃ (p : G.Walk v w), p.length ≤ Fintype.card V - 1 := by
+  obtain ⟨v⟩ := ‹Nonempty V›
+  use v
+  intro w
+  obtain ⟨p⟩ := hG v w
   sorry
 
 

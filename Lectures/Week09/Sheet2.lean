@@ -6,26 +6,25 @@ Authors: Sorrachai Yingchareonthawornchai
 
 import Mathlib.Tactic
 import Mathlib.Combinatorics.SimpleGraph.Finite
-import Mathlib.Combinatorics.SimpleGraph.Walk
+import Mathlib.Combinatorics.SimpleGraph.Init
+import Mathlib.Data.Sym.Sym2
 import Mathlib.Combinatorics.SimpleGraph.Metric
 
-structure FinSimpleGraph (V : Type u) [Fintype V] [DecidableEq V]  extends SimpleGraph V
+structure FinSimpleGraph (V : Type u) [Fintype V] [DecidableEq V]
+  extends SimpleGraph V
 
-noncomputable
-instance  fintypeFinSimpleGraph {V : Type u} [Fintype V] [DecidableEq V] (G : FinSimpleGraph V) (v : V): Fintype (G.neighborSet v) :=  Fintype.ofFinite ↑(G.neighborSet v)
+noncomputable instance  fintypeFinSimpleGraph
+  {V : Type u} [Fintype V]
+  [DecidableEq V] (G : FinSimpleGraph V) (v : V) :
+  Fintype (G.neighborSet v) :=  Fintype.ofFinite ↑(G.neighborSet v)
 
 open Finset SimpleGraph
 
 variable  {V : Type*} [Fintype V] [DecidableEq V]
 
-#check Finset
-
 noncomputable
-def bfs_rec
-(G : FinSimpleGraph V)
-(queue : List V)
-(visited : Finset V)
-  :=
+def bfs_rec (G : FinSimpleGraph V) (queue : List V) (visited : Finset V)
+  : Finset V :=
   match queue with
   | [] => visited
   | v :: queue =>
@@ -33,7 +32,16 @@ def bfs_rec
     let queue' := queue ++ new_neighbors.toList
     let visited' := visited ∪ new_neighbors
     bfs_rec G queue' visited'
-    termination_by (Fintype.card V - #visited + queue.length) decreasing_by sorry
+  termination_by (Fintype.card V - #visited + queue.length)
+  decreasing_by
+   have h0: Disjoint visited (G.neighborFinset v \ visited) := by
+    exact disjoint_sdiff
+   simp
+   have h1 : Fintype.card V ≥ #visited + #(G.neighborFinset v \ visited) := by
+     rw [← Finset.card_union_of_disjoint h0]
+     exact card_le_univ (visited ∪ G.neighborFinset v \ visited)
+   grind
+
 
 -- We leave the termination proof as an exercise
 
